@@ -86,26 +86,19 @@ export const initGame = (deck1: string[], deck2: string[]): Game => {
     attackToken: PlayerId.One,
     spellStack: [],
   };
-
-  (game.cards.get(0) as Nexus).player = game.player1;
-  (game.cards.get(1) as Nexus).player = game.player2;
+  const initPlayer = (game: Game, playerId: PlayerId) => {
+    const player = getPlayer(game, playerId);
+    (game.cards.get(playerId) as Nexus).player = player;
+    for (const card of (playerId === PlayerId.One ? deck1 : deck2)) {
+      const id = game.nextCardId++;
+      game.cards.set(id, buildCard(CARDS[card], id, playerId));
+      player.deck.push(id);
+    }
+  
+    shuffle(player.deck);  
+  }
   // instanciate all the cards
-
-  for (const card of deck1) {
-    const id = game.nextCardId++;
-    game.cards.set(id, buildCard(CARDS[card], id, PlayerId.One));
-    game.player1.deck.push(id);
-  }
-
-  shuffle(game.player1.deck);
-
-  for (const card of deck2) {
-    const id = game.nextCardId++;
-    game.cards.set(id, buildCard(CARDS[card], id, PlayerId.Two));
-    game.player2.deck.push(id);
-  }
-
-  shuffle(game.player2.deck);
+  forBoth(game, initPlayer);
 
   return game;
 };
@@ -133,6 +126,8 @@ export const buildCard = (
 
 export const passTurn = (game: Game) => {
   if (game.canEndRound) {
+    game.canEndRound = false;
+    game.actionOccured = false;
     endRound(game);
     return;
   }
@@ -218,6 +213,7 @@ export const passToken = (game: Game) => {
 export const startRound = (game: Game) => {
   game.round++;
   forBoth(game, gainManaGem);
+  forBoth(game, drawCard);
 
   emit("roundStart", {});
 };
@@ -238,7 +234,9 @@ export const removeKeyword = (game: Game, cardId: number, keyword: Keyword) => {
     return;
   }
 
-  card.baseStats.keywords = card.baseStats.keywords.filter((k) => k !== keyword);
+  card.baseStats.keywords = card.baseStats.keywords.filter(
+    (k) => k !== keyword
+  );
 
   for (const buff of card.buffs) {
     buff.keywords = buff.keywords.filter((k) => k !== keyword);
@@ -253,7 +251,7 @@ export const damage = (
 ) => {
   // This is only current for units but there should be a switch statement
   const target = game.cards.get(cardId);
-
+  amount = Math.max(amount, 0);
   if (!target) {
     console.warn("You attempted to damage a non existant card.");
     return;
@@ -315,3 +313,23 @@ export const absoluteStats = (unit: Card): UnitStats => {
 
   return stats;
 };
+
+
+export const playCard = (game: Game, cardId: number) => {
+  const card = game.cards.get(cardId);
+  if (!card || !getPlayer(game, card.owner).hand.includes(cardId)) {
+    return;
+  }
+
+
+  // Should card and mana be removed here?
+  switch(card.type) {
+    case CardType.Unit:
+      playUnit(game, card);
+      break;
+  }
+}
+
+export const playUnit = (game: Game, unit: CardUnit) => {
+
+}

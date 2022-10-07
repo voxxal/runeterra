@@ -1,5 +1,5 @@
 import { Game } from "./game.model";
-import { damage, drawCard, endRound, initGame } from "./game";
+import { damage, drawCard, endRound, initGame, passTurn } from "./game";
 
 const game: Game = initGame(["DEMACIA_CITHRIA_OF_CLOUDFIELD"], ["DEMACIA_CITHRIA_OF_CLOUDFIELD"]);
 
@@ -11,4 +11,4 @@ window.damage = damage;
 //@ts-expect-error
 window.drawCard = drawCard;
 //@ts-expect-error
-window.endRound = endRound;
+window.passTurn = passTurn;

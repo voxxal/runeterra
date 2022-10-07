@@ -36,7 +36,6 @@ export enum CardType {
   Nexus,
   Unit,
   Spell,
-  Champion,
 }
 
 export type Card = Nexus | CardUnit | CardSpell;
